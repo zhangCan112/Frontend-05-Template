@@ -1,0 +1,228 @@
+<style>
+  .white-chess {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(10px 10px at 10px 10px, #fff, #e2e2e2);
+    margin: 5px auto;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  .black-chess {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(7px 7px at 10px 10px, #fff, #333);
+    margin: 5px auto;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  .cell {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    background-color: #f6d67b;
+    border: solid 1px black;
+    vertical-align: middle;
+
+    line-height: 40px;
+    font-size: 30px;
+    text-align: center;
+  }
+</style>
+<div id="board"></div>
+<script>
+  ///棋手难度（递归深度）
+  const depth = 5;
+  ///棋盘大小
+  const size = 13;
+  ///棋盘的焦点范围
+  let startSize = size
+  let endSize = 0
+  ///当前棋手颜色 1：黑 2：白
+  let color = 1;
+  ///棋盘model
+  let pattern = (function (size) {
+    let tmp = [];
+    for (let i = 0; i < size * size; i++) {
+      tmp.push(0);
+    }
+    return tmp;
+  })(size);
+
+  function show() {
+    let board = document.getElementById("board");
+    board.innerHTML = "";
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        let cell = document.createElement("div");
+        cell.classList.add("cell");
+        if (pattern[i * size + j] !== 0) {
+          let chess = document.createElement("div");
+          chess.classList.add(
+            pattern[i * size + j] == 1 ? "black-chess" : "white-chess"
+          );
+          cell.appendChild(chess);
+        } else {
+          cell.addEventListener("click", () => move(j, i));
+        }
+        board.appendChild(cell);
+      }
+      board.appendChild(document.createElement("br"));
+    }
+  }
+
+  function move(x, y) {
+    pattern[y * size + x] = color;
+
+    startSize = Math.max(Math.min(startSize, x-2, y-2,), 0)
+    endSize = Math.min(Math.max(endSize, x+2, y+2), size-1)    
+    console.log(`area: ${startSize}--->${endSize}`)
+    if (check(x, y, pattern, color)) {
+      alert(`${color == 1 ? "黑棋" : "白棋"}获胜！`);
+    }
+    color = 3 - color;
+
+    if (willWin(pattern, color)) {
+      console.log(`${color == 1 ? "黑棋" : "白棋"}即将获胜！`);
+    }
+    // console.log(bestChoice(pattern, color, depth));
+    show();
+  }
+
+  function bestChoice(pattern, color, depth) {
+    let p = willWin(pattern, color);
+    if (p) {
+      return {
+        point: p,
+        result: 1,
+      };
+    }
+    let result = -2;
+    let point = null;
+    outer: for (let x = startSize; x <= endSize; x++) {
+      for (let y = startSize; y <= endSize; y++) {
+        if (pattern[y * size + x]) {
+          continue;
+        }
+
+        // console.log(depth)
+        //递归到目标深度后直接返回当前符合条件的
+        if (depth == 0) {
+          return {
+            point: { x, y },
+            result: 0,
+          };
+        }
+
+        let tmp = clone(pattern);
+        tmp[y * size + x] = color;
+        let opponentChoice = bestChoice(tmp, 3 - color, depth - 1);
+        if (-opponentChoice.result > result) {
+          result = -opponentChoice.result;
+          point = opponentChoice.point;
+        }
+        if (result == 1) {
+          break outer;
+        }
+      }
+    }
+    return {
+      point: point,
+      result: point ? result : 0,
+    };
+  }
+
+  function clone(pattern) {
+    return Object.create(pattern);
+  }
+
+  function willWin(pattern, color) {
+    for (let x = startSize; x <= endSize; x++) {
+      for (let y = startSize; y <= endSize; y++) {
+        if (pattern[y * size + x] === 0 && check(x, y, pattern, color)) {
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  }
+
+  function check(x, y, pattern, color) {
+
+    //横排检查
+    {
+      let i = x;
+      let j = x;
+      while (i > startSize && pattern[y * size + i - 1] == color) {
+        i--;
+      }
+      while (j < endSize  && pattern[y * size + j + 1] == color) {
+        j++;
+      }
+      if (j - i + 1 >= 5) {
+        return true;
+      }
+    }
+    //竖排
+    {
+      let i = y;
+      let j = y;
+      while (i > startSize && pattern[(i - 1) * size + x] == color) {
+        i--;
+      }
+      while (j < endSize && pattern[(j + 1) * size + x] == color) {
+        j++;
+      }
+      if (j - i + 1 >= 5) {
+        return true;
+      }
+    }
+    //两斜边
+    {
+      let i = 0;
+      let j = 0;
+      while (
+        x - (i + 1) > startSize &&
+        y - (i + 1) > startSize &&
+        pattern[(y - (i + 1)) * size + (x - (i + 1))] == color
+      ) {
+        i++;
+      }
+      while (
+        x + (j + 1) < endSize &&
+        y + (j + 1) < endSize &&
+        pattern[(y + (j + 1)) * size + (x + (j + 1))] == color
+      ) {
+        j++;
+      }
+      if (i + j + 1 >= 5) {
+        return true;
+      }
+    }
+
+    {
+      let i = 0;
+      let j = 0;
+      while (
+        x + (i + 1) > startSize &&
+        y - (i + 1) > startSize &&
+        pattern[(y - (i + 1)) * size + (x + (i + 1))] == color
+      ) {
+        i++;
+      }
+      while (
+        x - (j + 1) < endSize &&
+        y + (j + 1) < endSize &&
+        pattern[(y + (j + 1)) * size + (x - (j + 1))] == color
+      ) {
+        j++;
+      }
+      if (i + j + 1 >= 5) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  show();
+</script>

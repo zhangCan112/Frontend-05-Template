@@ -1,0 +1,66 @@
+<style>
+  .green {
+    background-color: green;
+  }
+  .red {
+    background-color: red;
+  }
+  .yellow {
+    background-color: yellow;
+  }
+  .gray {
+    background-color: gray;
+  }
+  .circle {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;    
+    display: inline-block;
+
+    line-height: 100px;
+    font-size: 50px;
+    text-align: center;
+    vertical-align: middle;
+    margin: 10px;
+  }
+</style>
+<div id="board"></div>
+<script>
+  const board = document.getElementById("board")
+  const colors = {
+      [-1]: 'gray',
+      [0]: 'red',
+      [1]: 'yellow',
+      [2]: 'green',
+  }    
+  let curColor = -1
+  function show(color, time) {      
+      curColor = color
+      board.innerHTML = ""
+      let a = [-1,-1,-1]
+      a.map((val, idx)=> {
+          if (idx == color) {
+              return color
+          }
+          return val
+      }).forEach(color => {
+          const light = document.createElement("div")
+          light.classList.add('circle', colors[color])          
+          light.innerText = color === -1 ? "" : time
+          board.appendChild(light)
+      });
+  }
+
+  let time = 0
+  setInterval(() => {
+      time = time % 17
+      if (time < 10) {
+          show(0, 10-time)
+      } else if (time < 12) {
+          show(1, 12-time)
+      } else {
+          show(2, 17-time)
+      }
+      time++
+  }, 1000)
+</script>
