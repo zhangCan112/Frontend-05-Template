@@ -1,0 +1,108 @@
+<style>
+  .cell {
+    display: inline-block;
+    line-height: 7px;
+    width: 6px;
+    height: 6px;
+    background-color: grey;
+    border-bottom: solid 1px white;
+    border-right: solid 1px white;
+    vertical-align: top;
+  }
+  #container {
+    width: 701px;
+  }
+</style>
+<div id="container"></div>
+<button id="save">save</button>
+<script>
+  let saveButton = document.getElementById("save");
+  saveButton.onclick = () => {
+    localStorage["map"] = JSON.stringify(map);
+  };
+
+  let size = 100;
+  let map = localStorage["map"]
+    ? JSON.parse(localStorage["map"])
+    : Array(size * size).fill(0);
+  let container = document.getElementById("container");
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      let cell = document.createElement("div");
+      cell.classList.add("cell");
+
+      if (map[y * size + x] === 1) {
+        cell.style.backgroundColor = "black";
+      }
+
+      cell.addEventListener("mousemove", () => {
+        if (mouseDown) {
+          if (clear) {
+            cell.style.backgroundColor = "grey";
+            map[y * size + x] = 0;
+          } else {
+            cell.style.backgroundColor = "black";
+            map[y * size + x] = 1;
+          }
+        }
+      });
+
+      container.appendChild(cell);
+    }
+  }
+
+  let mouseDown = false;
+  let clear = false;
+  container.addEventListener("mousedown", (e) => {
+    mouseDown = true;
+    clear = e.which == 3;
+  });
+  document.addEventListener("mouseup", () => (mouseDown = false));
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  function sleep(t) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, t);
+    });
+  }
+
+  async function findPath(map, start, end) {
+    let queue = [start];
+    let table = Object.create(map);
+
+    const insert = async (x, y, pre) => {
+      if (x < 0 || x >= size || y < 0 || y >= size) return;
+      if (table[y * size + x]) return;
+
+      container.children[y * size + x].style.backgroundColor = "lightgreen";
+      table[y * size + x] = pre;
+      queue.push([x, y]);
+    };
+
+    while (queue.length) {
+      let [x, y] = queue.shift();
+      console.log(x, y)
+      if (x == end[0] && y == end[1]) {
+        let path = []
+        while(x !== start[0] && y !== start[1]) {
+            path.push([x, y])
+            [x, y] = table[y*size + x];
+            sleep(30);
+            container.children[y * size + x].style.backgroundColor = "purple";
+        }
+        return path;
+      }
+      await insert(x, y + 1, [x, y]);
+      await insert(x - 1, y, [x, y]);
+      await insert(x, y - 1, [x, y]);
+      await insert(x + 1, y, [x, y]);
+
+      await insert(x + 1, y + 1, [x, y]);
+      await insert(x - 1, y - 1, [x, y]);
+      await insert(x + 1, y - 1, [x, y]);
+      await insert(x - 1, y + 1, [x, y]);
+    }
+
+    return null;
+  }
+</script>
