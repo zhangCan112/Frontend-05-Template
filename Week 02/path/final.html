@@ -71,7 +71,7 @@
         return (end[0] - point[0]) ** 2 + (end[1] - point[1]) ** 2
       }
   
-      let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
+      let queue = new Heap([start], (a, b) => distance(a) < distance(b));
       let table = Object.create(map);
   
       const insert = async (x, y, pre) => {
@@ -113,38 +113,82 @@
       return null;
     }
   
-    class Sorted {
-      constructor(data, compare) {
-        this.data = data.slice();
-        this.compare = compare || ((a, b) => a - b);
-      }
-  
-      take() {
-        if (!this.data.length) return;
-  
-        let min = this.data[0];
-        let minIndex = 0;
-  
-        for (let i = 0; i < this.data.length; i++) {
-          const val = this.data[i];
-          if (this.compare(val, min) < 0) {
-            min = val;
-            minIndex = i;
-          }
-        }
-  
-        this.data[minIndex] = this.data[this.data.length - 1];
-        this.data.pop();
-        return min;
-      }
-  
-      give(v) {
-        this.data.push(v);
-      }
-  
-      get length() {
-          return this.data.length
+    class Heap {
+    constructor(data, compare = (a, b) => a < b) {
+      this.data = data.slice();
+      this.compare = compare;
+      //建堆
+      this.buildHeap();
+    }
+
+    buildHeap() {
+      let n = this.data.length;
+      for (let i = parseInt(n / 2 - 1); i >= 0; --i) {
+        this.heapify(i);
+        console.log(this.data);
       }
     }
+    heapify(i) {
+      while (true) {
+        let minPos = i;
+        if (
+          i * 2 + 1 < this.data.length &&
+          !this.compare(this.data[minPos], this.data[i * 2 + 1])
+        ) {
+          minPos = i * 2 + 1;
+        }
+        if (
+          i * 2 + 2 < this.data.length &&
+          !this.compare( this.data[minPos], this.data[i * 2 + 2])
+        ) {
+          minPos = i * 2 + 2;
+        }
+        if (minPos == i) break;
+        this.swap(this.data, i, minPos);
+        i = minPos;
+      }
+    }
+
+    get length() {
+      return this.data.length;
+    }
+
+    take() {
+      if (!this.data.length) {
+        return;
+      }
+      let min = this.data[0];
+      this.data[0] = this.data[this.data.length - 1];
+      this.data.pop();
+      this.heapify(0);
+      return min;
+    }
+
+    give(v) {
+      this.data.push(v);
+      let i = this.data.length - 1;
+      while (true) {
+        let minPos = i;
+        if (
+          parseInt((i - 1) / 2) >= 0 &&
+          !this.compare(this.data[parseInt((i - 1) / 2)], this.data[minPos])
+        ) {
+          minPos = parseInt((i - 1) / 2);
+        }
+        if (minPos == i) {
+          break;
+        }
+        this.swap(this.data, i, minPos);
+        i = minPos;
+      }
+    }
+
+    swap(data, i, j) {
+      //交换 i 和 minPos
+      let tmp = this.data[i];
+      this.data[i] = this.data[j];
+      this.data[j] = tmp;
+    }
+  }
   </script>
   
