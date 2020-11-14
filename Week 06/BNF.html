@@ -19,12 +19,15 @@
     <AdditiveExpression> ::= 
     <MultiplicativeExpression>
     | <AdditiveExpression> <+> <MultiplicativeExpression>
-    | <AdditiveExpression> <-> <MultiplicativeExpression>
-    | <(> <AdditiveExpression> <)>
-    <MultiplicativeExpression> ::= 
-    <Number>
+    | <AdditiveExpression> <-> <MultiplicativeExpression>    
+    <MultiplicativeExpression> ::=       
+    <ParenthesizedExpression>
     |<MultiplicativeExpression><*><Number>
     |<MultiplicativeExpression><\><Number>    
+    <ParenthesizedExpression> ::= 
+    <Number>
+    | <(> <Expression> <)>
+
     `  
 </script>
 
@@ -57,7 +60,7 @@
           value: null,
         };
   
-        for (let i = 1; i < dictionary.length; i++) {
+        for (let i = 1; i < result.length; i++) {
           if (result[i]) {
             token.type = dictionary[i - 1];
             token.value = result[i];
@@ -73,24 +76,26 @@
   
     let source = [];
   
-    for (const token of tokenize("(1024 + 10) * 25")) {
+    for (const token of tokenize("(29 - (1024 + 10)) * 25")) {
       if (token.type != "Whitespace" && token.type != "LineTerminator") {
         source.push(token);
       }
     }
   
     /** 
-    带括号的四则运算产生式
+   带括号的四则运算产生式
     <Expression> ::=  <AdditiveExpression><EOF>
     <AdditiveExpression> ::= 
     <MultiplicativeExpression>
     | <AdditiveExpression> <+> <MultiplicativeExpression>
-    | <AdditiveExpression> <-> <MultiplicativeExpression>
-    | <(> <AdditiveExpression> <)>
-    <MultiplicativeExpression> ::= 
-    <Number>
+    | <AdditiveExpression> <-> <MultiplicativeExpression>    
+    <MultiplicativeExpression> ::=       
+    <ParenthesizedExpression>
     |<MultiplicativeExpression><*><Number>
     |<MultiplicativeExpression><\><Number>    
+    <ParenthesizedExpression> ::= 
+    <Number>
+    | <(> <AdditiveExpression> <)>
         */
     function Expression(source) {
       if (
@@ -164,7 +169,7 @@
     }
   
     function MultiplicativeExpression(source) {
-      if (source[0].type === "Number") {
+      if (source[0].type === "ParenthesizedExpression") {
         let node = {
           type: "MultiplicativeExpression",
           children: [source[0]],
@@ -209,8 +214,53 @@
       if (source[0].type === "MultiplicativeExpression") {
         return source[0];
       }
-  
+
+      ParenthesizedExpression(source)
       return MultiplicativeExpression(source);
+    }
+
+    function ParenthesizedExpression(source) {
+      if (source[0].type === "Number") {
+        let node = {
+          type: "ParenthesizedExpression",
+          children: [source[0]],
+        };
+        source[0] = node;
+        return ParenthesizedExpression(source);
+      }      
+
+      if (source[0].type === "(") {
+        let node = {
+          type: "ParenthesizedExpression",          
+          children: [],
+        };     
+        let newSource = []
+        let leftCount = 1
+        node.children.push(source.shift())
+         while (true) {
+          let next = source.shift()
+          if (next.type === "(") {
+            leftCount++
+          } else if (next.type === ")") {
+            leftCount--            
+          }
+          if (leftCount > 0) {
+            newSource.push(next)                       
+          } else {     
+            node.children.push(AdditiveExpression(newSource))            
+            node.children.push(next) 
+            break
+          }
+        }   
+        source.unshift(node)
+        return ParenthesizedExpression(source)        
+      }
+
+      if (source[0].type === "ParenthesizedExpression") {
+        return source[0];
+      }
+  
+      return ParenthesizedExpression(source);
     }
   
     console.log(Expression(source));
