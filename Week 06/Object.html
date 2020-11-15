@@ -1,0 +1,18 @@
+<script>
+    class Human {
+        health = 100
+        hurt(damage) {
+            health -= damage
+        }
+    }
+
+    class Dog {
+        bite() {
+            return 100
+        }
+    }
+
+    let yiyi = new Dog
+    let lilei = new Human
+    lilei.hurt(yiyi.bite())
+</script>
