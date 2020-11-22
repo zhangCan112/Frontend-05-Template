@@ -1,0 +1,43 @@
+<script>    
+    var a =  2
+    void function () {
+        a = 1;
+        return;
+        var a;
+    }()
+    console.log(a)
+
+    var b =  2
+    void function () {
+      try {
+        b = 1;
+        console.log("===>",b)
+        return;
+        let b; 
+      } catch (error) {
+          
+      }        
+    }()
+    console.log(b)
+</script>
+
+<script>
+   console.log("=============作用域=============")
+   var a =  2
+    void function () {
+        a = 1;
+        {
+            var a;
+        }        
+    }()
+    console.log(a)
+
+    var b =  2
+    void function () {
+        b = 1;
+        {
+          const b = 1;
+        }       
+    }()
+    console.log(b)
+</script>
