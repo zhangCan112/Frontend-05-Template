@@ -1,8 +1,57 @@
 let currentToken = null;
 let currentAttribute = null;
+const EOF = Symbol("EOF");
+const css = require('css');
 
 let stack = [{type: "document", children:[]}];
 let currentTextNode = null;
+let rules = [];
+
+
+function addCSSRules(text) {
+    var ast = css.parse(text);    
+    rules.push(...ast.stylesheet.rules);
+}
+
+
+function computeCSS(element) {
+    let elements = stack.slice().reverse();    
+    if (!element.computedStyle) {
+        element.computedStyle = {};        
+    }
+
+    for (let rule of rules) {
+        let selectorParts = rule.selectors[0].split(" ").reverse();
+        
+        if (!match(element, selectorParts[0])) {
+            continue;
+        }
+
+        let matched = false;
+
+        //选择器index
+        let j = 1;
+        for (/*元素index*/let i = 0; i < elements.length; i++) {
+            if (match(elements[i], selectorParts[j])) {
+                j++;
+            }                        
+        }
+
+        if (j >= selectorParts.length) {
+            matched = true;            
+        }
+
+        if (matched) {
+            console.log("Element", element, "matched rule", rule);
+        }
+
+    }
+}
+
+function match(element, selectorPart) {
+    return false
+}
+
 
 function emit(token) {    
     let top = stack[stack.length-1];
@@ -24,6 +73,8 @@ function emit(token) {
             }
         }
 
+        computeCSS(element)
+
         top.children.push(element);
         element.parent = top;
 
@@ -36,6 +87,9 @@ function emit(token) {
         if (top.tagName != token.tagName) {
             throw new Error("Tag start end doesn't match!");
         } else {
+            if (top.tagName === "style") {
+                addCSSRules(top.children[0].content);
+            }
             stack.pop();
         }
         currentTextNode = null;
@@ -50,8 +104,6 @@ function emit(token) {
         currentTextNode.content += token.content;
     }
 }
-
-const EOF = Symbol("EOF");
 
 function data(c) {
     if (c == "<") {
