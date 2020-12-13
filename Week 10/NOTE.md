@@ -64,3 +64,15 @@ URL===[HTTP]====>HTML
 2. 根据行高flex-align 和 item-align，确定元素具体位置
 3. 
  
+## 绘制
+### 绘制单个元素
+1. 绘制需要依赖一个图形环境。
+2. 我们这里采用了npm包images
+3. 绘制在一个viewPort上进行
+4. 与绘制相关的属性：background-color, border, background-image等
+
+### 绘制Dom
+1. 递归调用子元素的绘制方法完成Dom树的绘制。
+2. 忽略一些不需要绘制的节点
+3. 实际浏览器中，文字绘制是难点，组要依赖字体库，这里忽略。
+4. 实际浏览器中，还会对一些图层做compositing，这里也忽略。。
