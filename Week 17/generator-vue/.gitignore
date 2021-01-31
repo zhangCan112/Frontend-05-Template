@@ -1,0 +1,15 @@
+
+#React忽略规则
+/node_modules
+
+#忽略.idea文件夹
+.idea/
+
+#忽略.history
+.history/
+
+#忽略.vscode
+.vscode/
+
+yarn.lock
+package-lock.json
