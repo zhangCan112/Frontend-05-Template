@@ -13,7 +13,7 @@ module.exports = class extends (
   }
 
   async initPackage() {
-    letx` answer = await this.prompt([
+    let answer = await this.prompt([
       {
         type: "input",
         name: "name",
@@ -27,11 +27,15 @@ module.exports = class extends (
       description: "",
       main: "generators/app/index.js",
       scripts: {
-        test: 'echo "Error: no test specified" && exit 1',
+        test: 'mocha --require @babel/register ',
+        coverage: 'nyc mocha --require @babel/register',
+        build: 'webpack',        
       },
       author: "",
       license: "ISC",
-      devDependencies: {},
+      devDependencies: {
+
+      },
       dependencies: {},
     };
 
@@ -47,11 +51,31 @@ module.exports = class extends (
         "vue-style-loader",
         "css-loader",
         "copy-webpack-plugin",
+        "babel-loader",
+        "@babel/core",        
+        "@babel/preset-env",
+        "@babel/register",
+        "@istanbuljs/nyc-config-babel",
+        "babel-plugin-istanbul",
+        "mocha",
+        "nyc",
       ],
       { "save-dev": true }
-    );
-
+    );    
     {
+      this.fs.copyTpl(
+        this.templatePath("sample.test.js"),
+        this.destinationPath("test/sample.test.js")
+      );
+
+      this.fs.copyTpl(
+        this.templatePath(".babelrc"),
+        this.destinationPath(".babelrc")
+      );
+      this.fs.copyTpl(
+        this.templatePath(".nycrc"),
+        this.destinationPath(".nycrc")
+      );
       this.fs.copyTpl(
         this.templatePath("HelloWorld.vue"),
         this.destinationPath("src/HelloWorld.vue")
