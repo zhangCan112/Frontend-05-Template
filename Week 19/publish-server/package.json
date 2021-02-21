@@ -1,0 +1,17 @@
+{
+  "name": "publish-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "publish": "scp -r -P 22 ./* root@123.56.225.168:/home/zhangcan/publish-server/",
+    "start": "node ./server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "unzipper": "^0.10.11"
+  }
+}
